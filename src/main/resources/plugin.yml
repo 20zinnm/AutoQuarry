@@ -1,0 +1,9 @@
+name: AutoQuarryPlugin
+version: @version@
+main: tech.meyerzinn.autoquarry.AutoQuarryPlugin
+api-version: 1.14.2
+prefix: AutoQuarryPlugin
+depend: [Vault, SmartInvs]
+authors: [AniSkywalker]
+description: Automated quarries for the industrial Minecrafter.
+website: meyerzinn.tech

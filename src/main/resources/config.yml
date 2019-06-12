@@ -1,0 +1,14 @@
+materials:
+  STONE: false
+  DIORITE: false
+  GRAVEL: false
+  DIRT: false
+  GRANITE: false
+  CLAY: false
+  COAL_ORE: true
+  LAPIS_ORE: true
+  REDSTONE_ORE: true
+  GOLD_ORE: true
+  IRON_ORE: true
+  DIAMOND_ORE: true
+  EMERALD_ORE: true

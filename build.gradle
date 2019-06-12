@@ -1,0 +1,39 @@
+apply plugin: 'java-library'
+
+group = pluginGroup
+version = pluginVersion
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/groups/public/'
+    }
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+    maven {
+        name = 'nexus-repo'
+        url = "http://nexus.hc.to/content/repositories/pub_releases"
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    api 'org.spigotmc:spigot-api:1.14.2-R0.1-SNAPSHOT'
+    api 'fr.minuskube.inv:smart-invs:1.2.6'
+    implementation "net.milkbowl.vault:VaultAPI:1.7"
+    implementation 'com.google.code.gson:gson:2.8.5'
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        filter ReplaceTokens, tokens: [version: version]
+    }
+}
