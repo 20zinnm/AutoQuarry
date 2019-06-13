@@ -12,3 +12,5 @@ materials:
   IRON_ORE: true
   DIAMOND_ORE: true
   EMERALD_ORE: true
+  ANDESITE: false
+  GRASS_BLOCK: false

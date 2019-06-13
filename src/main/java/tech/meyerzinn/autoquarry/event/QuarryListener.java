@@ -33,8 +33,10 @@ public class QuarryListener implements Listener {
         if (e.getClickedBlock().getType() == Material.DISPENSER && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             BlockLocation loc = new BlockLocation(e.getClickedBlock().getLocation());
             QuarryData.fromBlockLocation(loc).ifPresent(q -> {
-                e.setCancelled(true);
-                QuarryMenu.getInventory(loc).open(e.getPlayer());
+                if (!e.getPlayer().isSneaking()) {
+                    e.setCancelled(true);
+                    QuarryMenu.getInventory(loc).open(e.getPlayer());
+                }
             });
         }
     }
@@ -79,18 +81,18 @@ public class QuarryListener implements Listener {
     @EventHandler
     public void onInventoryMoveItem(InventoryMoveItemEvent e) {
         if (e.getDestination().getHolder() instanceof BlockInventoryHolder) {
-            BlockInventoryHolder inventoryHolder = (BlockInventoryHolder) e.getDestination().getHolder();
-            BlockLocation location = new BlockLocation(inventoryHolder.getBlock().getLocation());
+            BlockInventoryHolder destinationInventoryHolder = (BlockInventoryHolder) e.getDestination().getHolder();
+            BlockLocation location = new BlockLocation(destinationInventoryHolder.getBlock().getLocation());
             if (QuarryData.fromBlockLocation(location).isPresent()) {
                 e.setCancelled(true);
                 Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> QuarryData.fromBlockLocation(location).ifPresent(quarry -> {
                     if (Fuel.sources.containsKey(e.getItem().getType())) {
-                        int amount = Math.min(quarry.getFuelCapacity().capacity - quarry.getFuel(), e.getItem().getAmount());
-                        HashMap<Integer, ItemStack> excess = inventoryHolder.getInventory().removeItem(new ItemStack(e.getItem().getType(), amount));
+                        int amount = Math.min((quarry.getFuelCapacity().capacity - quarry.getFuel()) / Fuel.sources.get(e.getItem().getType()), e.getItem().getAmount());
+                        HashMap<Integer, ItemStack> excess = e.getSource().removeItem(new ItemStack(e.getItem().getType(), amount));
                         for (ItemStack v : excess.values()) {
-                            amount = amount - v.getAmount() * Fuel.sources.get(v.getType());
+                            amount = amount - v.getAmount();
                         }
-                        quarry.setFuel(quarry.getFuel() + amount);
+                        quarry.setFuel(quarry.getFuel() + amount * Fuel.sources.get(e.getItem().getType()));
                     }
                 }));
             }

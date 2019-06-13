@@ -9,6 +9,7 @@ import fr.minuskube.inv.content.InventoryProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -19,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import tech.meyerzinn.autoquarry.AutoQuarryPlugin;
 import tech.meyerzinn.autoquarry.QuarryData;
 import tech.meyerzinn.autoquarry.QuarryRunner;
+import tech.meyerzinn.autoquarry.event.QuarryDataUpdateEvent;
 import tech.meyerzinn.autoquarry.util.BlockLocation;
 
 import java.util.Arrays;
@@ -70,36 +72,42 @@ public class QuarryMenu implements InventoryProvider, Listener {
                 ItemMeta fim = Objects.requireNonNull(filterButton.getItemMeta());
                 fim.setDisplayName("Filters");
                 filterButton.setItemMeta(fim);
-                contents.add(ClickableItem.of(filterButton, e -> {
+                contents.set(0, 0, ClickableItem.of(filterButton, e -> {
                     FilterMenu.getInventory(location).open(player);
                 }));
                 List<String> statsLore = Arrays.asList(
                         String.format("Blocks mined: %d", quarry.getBlocksMined()),
                         String.format("Blocks scanned: %d", quarry.getBlocksScanned()),
-                        String.format("Blocks remaining: %d", quarry.getBlocksTotal() - quarry.getBlocksScanned())
+                        String.format("Blocks remaining: %d", quarry.getBlocksTotal() - quarry.getBlocksScanned()),
+                        String.format("Fuel: %d/%d", quarry.getFuel(), quarry.getFuelCapacity().capacity)
                 );
                 if (QuarryRunner.isRunning(location)) {
                     ItemStack stopButton = new ItemStack(Material.RED_WOOL);
                     ItemMeta sim = Objects.requireNonNull(stopButton.getItemMeta());
                     sim.setDisplayName("Stop");
                     sim.setLore(statsLore);
-                    contents.add(ClickableItem.of(stopButton, e -> QuarryRunner.stop(location)));
+                    stopButton.setItemMeta(sim);
+                    contents.set(0, 4, ClickableItem.of(stopButton, e -> QuarryRunner.stop(location)));
                 } else {
                     ItemStack startButton = new ItemStack(Material.GREEN_WOOL);
                     ItemMeta sim = Objects.requireNonNull(startButton.getItemMeta());
                     sim.setDisplayName("Start");
                     sim.setLore(statsLore);
-                    contents.add(ClickableItem.of(startButton, e -> QuarryRunner.start(location)));
+                    startButton.setItemMeta(sim);
+                    contents.set(0, 4, ClickableItem.of(startButton, e -> QuarryRunner.start(location)));
                 }
                 ItemStack upgradeButton = new ItemStack(Material.NETHER_STAR);
                 ItemMeta uim = Objects.requireNonNull(upgradeButton.getItemMeta());
                 uim.setDisplayName("Upgrades");
                 upgradeButton.setItemMeta(uim);
-                contents.add(ClickableItem.of(upgradeButton, e -> {
-                    // open upgrade menu
-                }));
+                contents.set(0, 8, ClickableItem.of(upgradeButton, e -> UpgradeMenu.getInventory(location).open(player)));
             }
         }
+    }
+
+    @EventHandler
+    public void onQuarryDataUpdate(QuarryDataUpdateEvent e) {
+        dirty = true;
     }
 }
 

@@ -35,8 +35,9 @@ public enum MiningRadius {
     public ItemStack getIcon() {
         ItemStack item = new ItemStack(icon);
         ItemMeta meta = item.getItemMeta();
-        Objects.requireNonNull(meta).setDisplayName(String.format("Mining Radius %s ($%s)", RomanNumerals.convert(ordinal()), AutoQuarryPlugin.econ.format(cost)));
+        Objects.requireNonNull(meta).setDisplayName(String.format("Mining Radius %s (%s)", RomanNumerals.convert(ordinal()), AutoQuarryPlugin.econ.format(cost)));
         meta.setLore(Collections.singletonList("Excavates an area of " + (radius * 2 + 1) + "x" + (radius * 2 + 1) + " blocks."));
+        item.setItemMeta(meta);
         return item;
     }
 

@@ -69,15 +69,14 @@ public class FilterMenu implements InventoryProvider, Listener {
 
                 for (Material mat : AutoQuarryPlugin.defaultFilters.keySet()) {
                     ItemStack item = new ItemStack(mat);
-                    ChatColor color;
-                    if (quarry.shouldMine(mat)) {
-                        color = ChatColor.GREEN;
-                    } else {
-                        color = ChatColor.RED;
-                    }
-                    Objects.requireNonNull(item.getItemMeta()).setDisplayName(color + mat.toString());
                     ItemMeta im = item.getItemMeta();
-                    im.setLore(Collections.singletonList("Click here to toggle whether the quarry will mine this block."));
+                    Objects.requireNonNull(im);
+                    if (quarry.shouldMine(mat)) {
+                        im.setDisplayName(ChatColor.GREEN + "INCLUDED");
+                    } else {
+                        im.setDisplayName(ChatColor.RED + "EXCLUDED");
+                    }
+                    im.setLore(Arrays.asList("Click here to toggle whether", "the quarry will mine this block."));
                     item.setItemMeta(im);
                     if (quarry.shouldMine(mat)) {
                         items.add(ClickableItem.of(item, e -> quarry.toggleFilter(mat)));
@@ -90,19 +89,27 @@ public class FilterMenu implements InventoryProvider, Listener {
 
                 if (!pagination.isFirst()) {
                     ItemStack prevButton = new ItemStack(Material.ARROW);
+                    ItemMeta im = Objects.requireNonNull(prevButton.getItemMeta());
+                    im.setDisplayName("Previous Page");
+                    prevButton.setItemMeta(im);
                     Objects.requireNonNull(prevButton.getItemMeta()).setDisplayName("Previous Page");
                     contents.set(2, 3, ClickableItem.of(prevButton,
                             e -> getInventory(location).open(player, pagination.previous().getPage())));
                 }
                 if (!pagination.isLast()) {
                     ItemStack nextButton = new ItemStack(Material.ARROW);
+                    ItemMeta im = Objects.requireNonNull(nextButton.getItemMeta());
+                    im.setDisplayName("Next Page");
+                    nextButton.setItemMeta(im);
                     Objects.requireNonNull(nextButton.getItemMeta()).setDisplayName("Next Page");
                     contents.set(2, 5, ClickableItem.of(nextButton,
                             e -> getInventory(location).open(player, pagination.next().getPage())));
                 }
 
                 ItemStack doneButton = new ItemStack(Material.GREEN_WOOL);
-                Objects.requireNonNull(doneButton.getItemMeta()).setDisplayName("Done");
+                ItemMeta im = Objects.requireNonNull(doneButton.getItemMeta());
+                im.setDisplayName("Done");
+                doneButton.setItemMeta(im);
                 contents.set(2, 4, ClickableItem.of(doneButton,
                         e -> QuarryMenu.getInventory(location).open(player)));
             }

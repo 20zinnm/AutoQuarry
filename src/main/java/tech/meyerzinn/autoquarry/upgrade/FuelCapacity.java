@@ -33,6 +33,7 @@ public enum FuelCapacity {
         ItemMeta meta = Objects.requireNonNull(item.getItemMeta());
         meta.setDisplayName(String.format("Fuel Capacity %s (%s)", RomanNumerals.convert(ordinal()), AutoQuarryPlugin.econ.format(cost)));
         meta.setLore(Collections.singletonList("Increases fuel storage capacity."));
+        item.setItemMeta(meta);
         return item;
     }
 }

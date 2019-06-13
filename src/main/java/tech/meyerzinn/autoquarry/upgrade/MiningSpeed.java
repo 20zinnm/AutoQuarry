@@ -36,6 +36,7 @@ public enum MiningSpeed {
         ItemMeta meta = Objects.requireNonNull(item.getItemMeta());
         meta.setDisplayName(String.format("Mining Speed %s (%s)", ordinal(), AutoQuarryPlugin.econ.format(cost)));
         meta.setLore(Collections.singletonList("Mines at a rate of one block per " + ticks / 20 + " seconds."));
+        item.setItemMeta(meta);
         return item;
     }
 }

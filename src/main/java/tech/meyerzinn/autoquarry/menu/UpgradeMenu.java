@@ -35,9 +35,9 @@ public class UpgradeMenu implements InventoryProvider, Listener {
     private static final JavaPlugin plugin = JavaPlugin.getPlugin(AutoQuarryPlugin.class);
 
     private BlockLocation location;
-    private boolean dirty = true;
+    private boolean dirty = false;
 
-    public SmartInventory getInventory(BlockLocation location) {
+    public static SmartInventory getInventory(BlockLocation location) {
         UpgradeMenu provider = new UpgradeMenu(location);
         return SmartInventory.builder()
                 .id("quarryUpgradeMenu")
@@ -57,76 +57,74 @@ public class UpgradeMenu implements InventoryProvider, Listener {
     @Override
     public void init(Player player, InventoryContents contents) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        this.update(player, contents);
+        Optional<QuarryData> quarryDataOptional = QuarryData.fromBlockLocation(location);
+        if (!quarryDataOptional.isPresent()) {
+            SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
+        } else {
+            QuarryData quarry = quarryDataOptional.get();
+            List<ClickableItem> items = new ArrayList<>();
+            if (quarry.getFortune().next() != null) {
+                Fortune next = quarry.getFortune().next();
+                Objects.requireNonNull(next);
+                items.add(ClickableItem.of(next.getIcon(), e -> {
+                    EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
+                    if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
+                        quarry.setFortune(next);
+                    } else {
+                        SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
+                        player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
+                    }
+                }));
+            }
+            if (quarry.getSpeed().next() != null) {
+                MiningSpeed next = quarry.getSpeed().next();
+                Objects.requireNonNull(next);
+                items.add(ClickableItem.of(next.getIcon(), e -> {
+                    EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
+                    if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
+                        quarry.setSpeed(next);
+                    } else {
+                        SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
+                        player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
+                    }
+                }));
+            }
+            if (quarry.getSize().next() != null) {
+                MiningRadius next = quarry.getSize().next();
+                Objects.requireNonNull(next);
+                items.add(ClickableItem.of(next.getIcon(), e -> {
+                    EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
+                    if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
+                        quarry.setSize(next);
+                    } else {
+                        SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
+                        player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
+                    }
+                }));
+            }
+            if (quarry.getFuelCapacity().next() != null) {
+                FuelCapacity next = quarry.getFuelCapacity().next();
+                Objects.requireNonNull(next);
+                items.add(ClickableItem.of(next.getIcon(), e -> {
+                    EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
+                    if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
+                        quarry.setFuelCapacity(next);
+                    } else {
+                        SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
+                        player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
+                    }
+                }));
+            }
+            for (ClickableItem item : items) {
+                contents.add(item);
+            }
+        }
     }
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        if (dirty) {
-            dirty = false;
-            Optional<QuarryData> quarryDataOptional = QuarryData.fromBlockLocation(location);
-            if (!quarryDataOptional.isPresent()) {
-                SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
-            } else {
-                QuarryData quarry = quarryDataOptional.get();
-                List<ClickableItem> items = new ArrayList<>();
-                if (quarry.getFortune().next() != null) {
-                    Fortune next = quarry.getFortune().next();
-                    Objects.requireNonNull(next);
-                    items.add(ClickableItem.of(next.getIcon(), e -> {
-                        EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
-                        if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
-                            quarry.setFortune(next);
-                        } else {
-                            SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
-                            player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
-                        }
-                    }));
-                }
-                if (quarry.getSpeed().next() != null) {
-                    MiningSpeed next = quarry.getSpeed().next();
-                    Objects.requireNonNull(next);
-                    items.add(ClickableItem.of(next.getIcon(), e -> {
-                        EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
-                        if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
-                            quarry.setSpeed(next);
-                        } else {
-                            SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
-                            player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
-                        }
-                    }));
-                }
-                if (quarry.getSize().next() != null) {
-                    MiningRadius next = quarry.getSize().next();
-                    Objects.requireNonNull(next);
-                    items.add(ClickableItem.of(next.getIcon(), e -> {
-                        EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
-                        if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
-                            quarry.setSize(next);
-                        } else {
-                            SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
-                            player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
-                        }
-                    }));
-                }
-                if (quarry.getFuelCapacity().next() != null) {
-                    FuelCapacity next = quarry.getFuelCapacity().next();
-                    Objects.requireNonNull(next);
-                    items.add(ClickableItem.of(next.getIcon(), e -> {
-                        EconomyResponse resp = AutoQuarryPlugin.econ.withdrawPlayer(player, next.cost);
-                        if (resp.type == EconomyResponse.ResponseType.SUCCESS) {
-                            quarry.setFuelCapacity(next);
-                        } else {
-                            SmartInvsPlugin.manager().getInventory(player).ifPresent(inv -> inv.close(player));
-                            player.sendMessage(ChatColor.RED + "Error upgrading quarry: " + resp.errorMessage);
-                        }
-                    }));
-                }
-                for (ClickableItem item : items) {
-                    contents.add(item);
-                }
-            }
-        }
+        if (dirty)
+            UpgradeMenu.getInventory(location).open(player);
     }
 
     @EventHandler

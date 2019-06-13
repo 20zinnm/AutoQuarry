@@ -1,7 +1,7 @@
-name: AutoQuarryPlugin
+name: AutoQuarry
 version: @version@
 main: tech.meyerzinn.autoquarry.AutoQuarryPlugin
-api-version: 1.14.2
+api-version: "1.13"
 prefix: AutoQuarryPlugin
 depend: [Vault, SmartInvs]
 authors: [AniSkywalker]

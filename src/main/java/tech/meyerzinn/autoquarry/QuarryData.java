@@ -32,7 +32,9 @@ public class QuarryData {
     static {
         for (Fortune f : Fortune.values()) {
             ItemStack is = new ItemStack(Material.DIAMOND_PICKAXE);
-            is.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, f.ordinal());
+            if (f.ordinal() > 0) {
+                is.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, f.ordinal());
+            }
             fortuneTools.put(f, is);
         }
     }
@@ -59,7 +61,7 @@ public class QuarryData {
 
     public static Optional<QuarryData> fromBlockLocation(BlockLocation l) {
         if (l.getBlock().getType() == Material.DISPENSER) {
-            Dispenser disp = (Dispenser) l.getBlock();
+            Dispenser disp = (Dispenser) l.getBlock().getState();
             if (disp.getPersistentDataContainer().has(key, new QuarryDataType())) {
                 QuarryData qd = disp.getPersistentDataContainer().get(key, new QuarryDataType());
                 Objects.requireNonNull(qd);
@@ -87,7 +89,7 @@ public class QuarryData {
         ItemStack is = new ItemStack(Material.DISPENSER);
         ItemMeta im = Objects.requireNonNull(is.getItemMeta());
         im.setDisplayName("Quarry");
-        List<String> lore = Arrays.asList(String.format("Fuel: %s/%s", fuel, capacity.capacity), "Upgrades: ");
+        ArrayList<String> lore = new ArrayList<>(Arrays.asList(String.format("Fuel: %s/%s", fuel, capacity.capacity), "Upgrades: "));
         if (size.ordinal() > 0) {
             lore.add(String.format("- Mining Radius %s", RomanNumerals.convert(size.ordinal())));
         }
@@ -112,18 +114,17 @@ public class QuarryData {
         this.blocksScanned = 0;
         this.blocksMined = 0;
 
-        location.getBlock().setType(Material.DISPENSER);
-        Dispenser disp = (Dispenser) location.getBlock();
+        Dispenser disp = (Dispenser) location.getBlock().getState();
         Directional im = (Directional) disp.getBlockData();
-        im.setFacing(BlockFace.DOWN);
+        im.setFacing(BlockFace.SOUTH);
         disp.setBlockData(im);
-
         this.updateBlock();
     }
 
     public void updateBlock() {
-        Dispenser disp = (Dispenser) location.getBlock();
+        Dispenser disp = (Dispenser) location.getBlock().getState();
         disp.getPersistentDataContainer().set(key, new QuarryDataType(), this);
+        disp.update();
     }
 
     public BlockLocation getTarget() {
@@ -134,13 +135,11 @@ public class QuarryData {
         if (target.z > location.z + size.radius) {
             QuarryRunner.stop(location);
         } else if (target.x > location.x + size.radius) {
-            target.z++;
-            target.x = location.x - size.radius;
+            target = new BlockLocation(target.world, location.x - size.radius, target.y, target.z + 1);
         } else if (target.y <= 1) {
-            target.x++;
-            target.y = location.y - 2;
+            target = new BlockLocation(target.world, target.x + 1, location.y - 2, target.z);
         } else {
-            target.y--;
+            target = new BlockLocation(target.world, target.x, target.y - 1, target.z);
         }
     }
 
@@ -148,7 +147,7 @@ public class QuarryData {
         return fuel;
     }
 
-    private void doUpdate(boolean restart) {
+    protected void doUpdate(boolean restart) {
         updateBlock();
         JavaPlugin.getPlugin(AutoQuarryPlugin.class).getServer().getPluginManager().callEvent(new QuarryDataUpdateEvent(this.location, restart));
     }
@@ -207,7 +206,7 @@ public class QuarryData {
         if (filters.containsKey(mat)) {
             filters.put(mat, !filters.get(mat));
         } else {
-            filters.put(mat, AutoQuarryPlugin.defaultFilters.get(mat));
+            filters.put(mat, !AutoQuarryPlugin.defaultFilters.get(mat));
         }
         doUpdate(false);
     }
@@ -221,6 +220,9 @@ public class QuarryData {
             QuarryRunner.stop(location);
             return;
         }
+        if (target == null) {
+            target = new BlockLocation(location.world, location.x - size.radius, location.y - 2, location.z - size.radius);
+        }
         Block block = target.getBlock();
         blocksScanned++;
         if (shouldMine(block.getType())) {
@@ -229,8 +231,8 @@ public class QuarryData {
             target.world.playSound(block.getLocation(), Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
             blocksMined++;
             Collection<ItemStack> overflow = drops;
-            if (location.getBelow().getBlock().getBlockData() instanceof BlockInventoryHolder) {
-                BlockInventoryHolder holder = (BlockInventoryHolder) location.getBelow().getBlock().getBlockData();
+            if (location.getBelow().getBlock().getState() instanceof BlockInventoryHolder) {
+                BlockInventoryHolder holder = (BlockInventoryHolder) location.getBelow().getBlock().getState();
                 overflow = holder.getInventory().addItem(drops.toArray(new ItemStack[0])).values();
             }
             for (ItemStack is : overflow) {

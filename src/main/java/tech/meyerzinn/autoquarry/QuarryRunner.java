@@ -10,6 +10,7 @@ import tech.meyerzinn.autoquarry.util.BlockLocation;
 import tech.meyerzinn.autoquarry.util.BlockLocationAdapter;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,13 +30,17 @@ public class QuarryRunner implements Runnable, Listener {
     public static void start(BlockLocation location) {
         // make sure it's not running
         stop(location);
-        QuarryData.fromBlockLocation(location).ifPresent(qd -> running.put(location, plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new QuarryRunner(location), (long) 0F, qd.getSpeed().ticks)));
+        QuarryData.fromBlockLocation(location).ifPresent(qd -> {
+            running.put(location, plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new QuarryRunner(location), (long) qd.getSpeed().ticks, qd.getSpeed().ticks));
+            qd.doUpdate(false);
+        });
     }
 
     public static void stop(BlockLocation loc) {
         if (running.containsKey(loc)) {
             plugin.getServer().getScheduler().cancelTask(running.get(loc));
             running.remove(loc);
+            plugin.getServer().getPluginManager().callEvent(new QuarryDataUpdateEvent(loc, false));
         }
     }
 
@@ -67,8 +72,8 @@ public class QuarryRunner implements Runnable, Listener {
     }
 
     public static void save(File file) {
-        try {
-            gson.toJson(running.keySet(), new FileWriter(file, false));
+        try (FileWriter writer = new FileWriter(file, false)) {
+            gson.toJson(running.keySet(), writer);
         } catch (IOException e) {
             plugin.getLogger().severe("Could not save running quarries. All quarries are stopped.");
             e.printStackTrace();
@@ -76,12 +81,13 @@ public class QuarryRunner implements Runnable, Listener {
     }
 
     public static void load(File file) {
-        try {
-            BlockLocation[] run = gson.fromJson(new FileReader(file), BlockLocation[].class);
+        try (FileReader reader = new FileReader(file)) {
+            BlockLocation[] run = gson.fromJson(reader, BlockLocation[].class);
+            if (run == null) return;
             for (BlockLocation location : run) {
                 start(location);
             }
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             plugin.getLogger().severe("Could not load running quarries. All quarries are stopped.");
             e.printStackTrace();
         }

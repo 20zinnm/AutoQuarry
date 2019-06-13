@@ -4,11 +4,13 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
+import java.util.Objects;
+
 public class BlockLocation {
-    public World world;
-    public int x;
-    public int y;
-    public int z;
+    public final World world;
+    public final int x;
+    public final int y;
+    public final int z;
 
     public BlockLocation(World world, int x, int y, int z) {
         this.world = world;
@@ -59,9 +61,18 @@ public class BlockLocation {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(world.getUID(), x, y, z);
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (!(o instanceof BlockLocation)) return false;
-        BlockLocation blo = (BlockLocation) o;
-        return blo.world.getUID() == world.getUID() && blo.x == x && blo.y == y && blo.z == z;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BlockLocation that = (BlockLocation) o;
+        return x == that.x &&
+                y == that.y &&
+                z == that.z &&
+                world.getUID().equals(that.world.getUID());
     }
 }

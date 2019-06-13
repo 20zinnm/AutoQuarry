@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import tech.meyerzinn.autoquarry.AutoQuarryPlugin;
 import tech.meyerzinn.autoquarry.util.RomanNumerals;
 
 import java.util.Collections;
@@ -30,8 +31,9 @@ public enum Fortune {
         ItemStack icon = new ItemStack(Material.ENCHANTED_BOOK);
         EnchantmentStorageMeta meta = (EnchantmentStorageMeta) icon.getItemMeta();
         Objects.requireNonNull(meta).addStoredEnchant(Enchantment.LOOT_BONUS_BLOCKS, ordinal(), false);
-        meta.setDisplayName(String.format("Fortune %s (%s)", RomanNumerals.convert(ordinal()), cost));
+        meta.setDisplayName(String.format("Fortune %s (%s)", RomanNumerals.convert(ordinal()), AutoQuarryPlugin.econ.format(cost)));
         meta.setLore(Collections.singletonList("Substantially increases loot gained."));
+        icon.setItemMeta(meta);
         return icon;
     }
 }
