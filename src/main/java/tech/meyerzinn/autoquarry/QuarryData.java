@@ -56,7 +56,7 @@ public class QuarryData {
     }
 
     public int getBlocksTotal() {
-        return (location.y - 3) * (size.radius * 2 + 1) * (size.radius * 2 + 1);
+        return (location.y - 2) * (size.radius * 2 + 1) * (size.radius * 2 + 1);
     }
 
     public static Optional<QuarryData> fromBlockLocation(BlockLocation l) {
@@ -238,9 +238,9 @@ public class QuarryData {
             for (ItemStack is : overflow) {
                 location.world.dropItemNaturally(location.getBelow().toLocation(), is);
             }
+            fuel--;
         }
         nextTarget();
-        fuel--;
         doUpdate(false);
     }
 
