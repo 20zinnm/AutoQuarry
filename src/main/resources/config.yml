@@ -1,3 +1,5 @@
+# Materials defines the default filter configuration of a quarry. Thus, it also specifies all materials which a quarry
+# may mine.
 materials:
   STONE: false
   DIORITE: false
@@ -14,3 +16,11 @@ materials:
   EMERALD_ORE: true
   ANDESITE: false
   GRASS_BLOCK: false
+
+# Configure what items can be used to fuel, and how much fuel each is worth.
+fuels:
+  LAVA_BUCKET: 800
+  COAL_BLOCK: 640
+  BLAZE_ROD: 96
+  COAL: 64
+  CHARCOAL: 64

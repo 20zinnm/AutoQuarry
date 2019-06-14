@@ -18,7 +18,6 @@ import tech.meyerzinn.autoquarry.QuarryData;
 import tech.meyerzinn.autoquarry.QuarryRunner;
 import tech.meyerzinn.autoquarry.menu.QuarryMenu;
 import tech.meyerzinn.autoquarry.util.BlockLocation;
-import tech.meyerzinn.autoquarry.util.Fuel;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -35,7 +34,11 @@ public class QuarryListener implements Listener {
             QuarryData.fromBlockLocation(loc).ifPresent(q -> {
                 if (!e.getPlayer().isSneaking()) {
                     e.setCancelled(true);
-                    QuarryMenu.getInventory(loc).open(e.getPlayer());
+                    if (AutoQuarryPlugin.perm.has(e.getPlayer(), "autoquarry.use")) {
+                        QuarryMenu.getInventory(loc).open(e.getPlayer());
+                    } else {
+                        e.getPlayer().sendMessage("You do not have permission to use a quarry.");
+                    }
                 }
             });
         }
@@ -47,21 +50,28 @@ public class QuarryListener implements Listener {
             BlockLocation location = new BlockLocation(e.getBlock().getLocation());
             Optional<QuarryData> quarryDataOptional = QuarryData.fromItemStack(e.getItemInHand(), location);
             if (quarryDataOptional.isPresent()) {
-                QuarryData qd = quarryDataOptional.get();
-                e.getBlock().getWorld().playEffect(e.getBlock().getLocation(), Effect.VILLAGER_PLANT_GROW, 0);
-                qd.placeAsBlock(location);
+                if (AutoQuarryPlugin.perm.has(e.getPlayer(), "autoquarry.place")) {
+                    QuarryData qd = quarryDataOptional.get();
+                    e.getBlock().getWorld().playEffect(e.getBlock().getLocation(), Effect.VILLAGER_PLANT_GROW, 0);
+                    qd.placeAsBlock(location);
+                } else {
+                    e.setCancelled(true);
+                    e.getPlayer().sendMessage("You do not have permission to place a quarry.");
+                }
             } else {
-                BlockLocation[] neighbors = location.getNeighbors();
-                for (BlockLocation l : neighbors) {
-                    if (l.getBlock().getType() != Material.IRON_BARS) return;
+                if (e.getPlayer().hasPermission("autoquarry.create")) {
+                    BlockLocation[] neighbors = location.getNeighbors();
+                    for (BlockLocation l : neighbors) {
+                        if (l.getBlock().getType() != Material.IRON_BARS) return;
+                    }
+                    // create a new quarry
+                    for (BlockLocation l : neighbors) {
+                        l.getBlock().setType(Material.AIR);
+                    }
+                    QuarryData qd = new QuarryData();
+                    qd.placeAsBlock(location);
+                    e.getBlock().getWorld().playEffect(e.getBlock().getLocation(), Effect.VILLAGER_PLANT_GROW, 0);
                 }
-                // create a new quarry
-                for (BlockLocation l : neighbors) {
-                    l.getBlock().setType(Material.AIR);
-                }
-                QuarryData qd = new QuarryData();
-                qd.placeAsBlock(location);
-                e.getBlock().getWorld().playEffect(e.getBlock().getLocation(), Effect.VILLAGER_PLANT_GROW, 0);
             }
         }
     }
@@ -86,13 +96,14 @@ public class QuarryListener implements Listener {
             if (QuarryData.fromBlockLocation(location).isPresent()) {
                 e.setCancelled(true);
                 Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> QuarryData.fromBlockLocation(location).ifPresent(quarry -> {
-                    if (Fuel.sources.containsKey(e.getItem().getType())) {
-                        int amount = Math.min((quarry.getFuelCapacity().capacity - quarry.getFuel()) / Fuel.sources.get(e.getItem().getType()), e.getItem().getAmount());
+                    if (AutoQuarryPlugin.fuels.containsKey(e.getItem().getType())) {
+                        int fuelPerItem = AutoQuarryPlugin.fuels.get(e.getItem().getType());
+                        int amount = Math.min((quarry.getFuelCapacity().capacity - quarry.getFuel()) / fuelPerItem, e.getItem().getAmount());
                         HashMap<Integer, ItemStack> excess = e.getSource().removeItem(new ItemStack(e.getItem().getType(), amount));
                         for (ItemStack v : excess.values()) {
                             amount = amount - v.getAmount();
                         }
-                        quarry.setFuel(quarry.getFuel() + amount * Fuel.sources.get(e.getItem().getType()));
+                        quarry.setFuel(quarry.getFuel() + amount * fuelPerItem);
                     }
                 }));
             }
